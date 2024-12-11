@@ -5,25 +5,34 @@
         </h2>
     </x-slot>
     <x-admin-sidebar />
-
     @if(session('success'))
-    <div class="flex items-center p-4 mb-4 text-sm text-yellow-800 border border-yellow-300 rounded-lg bg-yellow-50 dark:bg-gray-800 dark:text-yellow-300 dark:border-yellow-800 w-full max-w-md mx-auto" role="alert">
-        <svg class="flex-shrink-0 inline w-4 h-4 me-3" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
-            <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
-        </svg>
-        <div>
-            <span class="font-medium">{{ session('success') }}</span>
+    <div id="popup-alert" class="fixed inset-0 flex items-center justify-center z-50">
+        <div class="bg-yellow-50 border border-yellow-300 text-yellow-800 p-4 rounded-lg shadow-lg max-w-md w-full">
+            <div class="flex items-center">
+                <svg class="w-6 h-6 mr-3" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M10 .5a9.5 9.5 0 1 0 9.5 9.5A9.51 9.51 0 0 0 10 .5ZM9.5 4a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM12 15H8a1 1 0 0 1 0-2h1v-3H8a1 1 0 0 1 0-2h2a1 1 0 0 1 1 1v4h1a1 1 0 0 1 0 2Z"/>
+                </svg>
+                <div class="font-medium">{{ session('success') }}</div>
+            </div>
         </div>
     </div>
+
+    <script>
+        setTimeout(function() {
+            document.getElementById('popup-alert').style.display = 'none';
+        }, 1000);
+    </script>
 @endif
 
 <div class="p-4 sm:ml-64">
-    <!-- Table Container without height restriction -->
+    <div class="bg-blue-500 shadow-md rounded px-8 pt-6 pb-8 mb-4" style="height: 70px;">
+        <h1 class="text-2xl font-bold mb-4 text-center text-white">All Users</h1>
+    </div>
     <div class="overflow-x-auto">
         <table class="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
             <thead class="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
                 <tr>
-                    <th scope="col" class="px-6 py-3">ID</th>
+                    <th scope="col" class="px-6 py-3">No</th>
                     <th scope="col" class="px-6 py-3">Name</th>
                     <th scope="col" class="px-6 py-3">Email</th>
                     <th scope="col" class="px-6 py-3">Role</th>
@@ -34,7 +43,7 @@
             <tbody>
                 @foreach($users as $user)
                     <tr class="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600">
-                        <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white">{{ $user->id }}</td>
+                        <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap dark:text-white"> {{ ($users->currentPage() - 1) * $users->perPage() + $loop->iteration }}</td>
                         <td class="px-6 py-4">{{ $user->name }}</td>
                         <td class="px-6 py-4">{{ $user->email }}</td>
                         <td class="px-6 py-4">{{ $user->role }}</td>
@@ -46,12 +55,9 @@
                             </button>
                         </td>
                     </tr>
-                    <!-- Modal for deletion confirmation -->
                     <div id="delete-modal-{{ $user->id }}" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed top-0 right-0 left-0 z-50 justify-center items-center w-full md:inset-0 h-[calc(100%-1rem)] max-h-full">
                         <div class="relative p-4 w-full max-w-2xl max-h-full">
-                            <!-- Modal content -->
                             <div class="relative bg-white rounded-lg shadow dark:bg-gray-700">
-                                <!-- Modal header -->
                                 <div class="flex items-center justify-between p-4 md:p-5 border-b rounded-t dark:border-gray-600">
                                     <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
                                         Confirm Deletion
@@ -63,13 +69,11 @@
                                         <span class="sr-only">Close modal</span>
                                     </button>
                                 </div>
-                                <!-- Modal body -->
                                 <div class="p-4 md:p-5 space-y-4">
                                     <p class="text-base leading-relaxed text-gray-500 dark:text-gray-400">
                                         Apakah Anda yakin ingin menghapus user ini?
                                     </p>
                                 </div>
-                                <!-- Modal footer -->
                                 <div class="flex items-center p-4 md:p-5 border-t border-gray-200 rounded-b dark:border-gray-600">
                                     <form action="{{ route('admin.user.destroy', $user->id) }}" method="POST" class="inline-block">
                                         @csrf
