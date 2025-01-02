@@ -12,7 +12,7 @@
                     <div class="flex items-center space-x-6">
                         <!-- Gambar Buku -->
                         @if ($book->image)
-                            <img src="{{ asset('images/books/' . $book->image) }}" alt="{{ $book->title }}"
+                            <img src="{{ asset($book->image) }}" alt="{{ $book->title }}"
                                 class="w-100 h-120 object-cover rounded-lg">
                         @endif
 
