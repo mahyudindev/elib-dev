@@ -6,58 +6,111 @@ use App\Models\Book;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 
+
 class BookController extends Controller
 {
-    // Fungsi untuk menampilkan katalog buku
+    public function __construct()
+    {
+        $this->middleware('admin')->only(['create', 'store', 'edit', 'update', 'destroy']);
+    }
+
     public function index()
     {
         $books = Book::all();
-        return view('books.index', compact('books'));
+        return view('admin.books.index', compact('books'));
     }
 
-    // Fungsi untuk menampilkan detail buku
-    public function show($id)
+    public function create()
     {
-        $book = Book::findOrFail($id);
-        return view('books.show', compact('book'));
+        return view('admin.books.create');
     }
 
-    // Fungsi untuk menampilkan form edit buku
+    public function store(Request $request)
+{
+    $request->validate([
+        'title' => 'required|string|max:255',
+        'author' => 'required|string|max:255',
+        'category' => 'required|string|max:255',
+        'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+        'pdf' => 'nullable|file|mimes:pdf|max:10000', // Validasi PDF
+    ]);
+
+    $book = new Book();
+    $book->title = $request->title;
+    $book->author = $request->author;
+    $book->category = $request->category;
+
+    if ($request->hasFile('image')) {
+        $image = $request->file('image');
+        $filename = $book->id . '.' . $image->getClientOriginalExtension();
+        $image->storeAs('books', $filename, 'public');
+        $book->image = 'storage/books/' . $filename;
+        $book->save();
+    }
+
+    if ($request->hasFile('pdf')) {
+        $pdf = $request->file('pdf');
+        $filename = $book->id . '.' . $pdf->getClientOriginalExtension();
+        $pdf->storeAs('pdf', $filename, 'public');
+        $book->pdf = 'storage/pdf/' . $filename;
+        $book->save();
+    }
+
+
+    return redirect()->route('admin.books.index')->with('success', 'Buku berhasil ditambahkan.');
+}
+
     public function edit($id)
     {
         $book = Book::findOrFail($id);
-        return view('books.edit', compact('book'));
+        return view('admin.books.edit', compact('book'));
     }
 
-    // Fungsi untuk mengupdate data buku
+
     public function update(Request $request, $id)
-    {
-        $request->validate([
-            'title' => 'required|string|max:255',
-            'author' => 'required|string|max:255',
-            'category' => 'required|string|max:255',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-        ]);
+{
+    $request->validate([
+        'title' => 'required|string|max:255',
+        'author' => 'required|string|max:255',
+        'category' => 'required|string|max:255',
+        'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+    ]);
 
-        $book = Book::findOrFail($id);
-        $book->title = $request->title;
-        $book->author = $request->author;
-        $book->category = $request->category;
+    $book = Book::findOrFail($id);
+    $book->title = $request->title;
+    $book->author = $request->author;
+    $book->category = $request->category;
 
-        // Jika ada file gambar yang diunggah, simpan gambar baru dan hapus yang lama
-        if ($request->hasFile('image')) {
-            // Hapus gambar lama jika ada
-            if ($book->image && Storage::exists('public/images/books/' . $book->image)) {
-                Storage::delete('public/images/books/' . $book->image);
-            }
-
-            // Simpan gambar baru
-            $imagePath = $request->file('image')->store('public/images/books');
-            $book->image = basename($imagePath);
-        }
-
+    if ($request->hasFile('image')) {
+        $image = $request->file('image');
+        $filename = $book->id . '.' . $image->getClientOriginalExtension();
+        $image->storeAs('books', $filename, 'public');
+        $book->image = 'storage/books/' . $filename;
         $book->save();
+    }
 
-        return redirect()->route('books.index')->with('success', 'Data buku berhasil diperbarui.');
+    if ($request->hasFile('pdf')) {
+        $pdf = $request->file('pdf');
+        $filename = $book->id . '.' . $pdf->getClientOriginalExtension();
+        $pdf->storeAs('pdf', $filename, 'public');
+        $book->pdf = 'storage/pdf/' . $filename;
+        $book->save();
+    }
+
+
+    return redirect()->route('admin.books.index')->with('success', 'Buku berhasil diperbarui.');
+}
+
+
+    public function destroy($id)
+    {
+        $book = Book::findOrFail($id);
+        if ($book->image) {
+            Storage::delete('public/images/books/' . $book->image);
+        }
+        $book->delete();
+
+        return redirect()->route('admin.books.index')->with('success', 'Buku berhasil dihapus.');
     }
 }
+
